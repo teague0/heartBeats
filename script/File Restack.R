@@ -2,6 +2,8 @@
 
 #Files are split into folders by who did the annotations. J's are csv files, with a couple of annotation pdfs thrown in. M's are txt files with rounded seconds. These need to be rejoined with the original data set based on their index.
 
+#2021-07-08 needed to fix some point mismatches.
+
 library(tidyverse)
 library(lubridate)
 
@@ -49,7 +51,7 @@ length(which(duplicated(m.data$index) == TRUE)) #No
 #Both recorded Armando. Stack J on M so that M's are first and J's will be dropped.
 jcols <- j.data %>% select(index, abBehav)
 mcols <- m.data %>% select(index, abBehav)
-index.dat <- mcols %>% bind_rows(jcols)
+index.dat <- jcols %>% bind_rows(mcols)
 range(index.dat$index, na.rm=T)
 
 #Find duplicated entries
@@ -83,7 +85,7 @@ table(beats$abBehav) #That's fixed. We now only have A, B, C, D, E
 
 #There are some things in here that we need to check further. 1) The number of A and E should be the same (number of starts == number of ends). Next, B + C should equal A. That checks out & looks good. Last, B should equal D (right?). 
 
-save(beats, file = "data/Uroderma Heart Rate 2021-07-06.Rdata")
+save(beats, file = "data/Uroderma Heart Rate 2021-07-08.Rdata")
 
 
 
