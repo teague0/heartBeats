@@ -51,3 +51,4 @@ RegAB <- lm(ABheart~as.numeric(ABTime))
 
 ABheart <- beats$heartRate.bpm[locDat$A.locs[1]:locDat$BC.locs[1]]
 ABTime <- beats$timestamp[locDat$A.locs[1]:locDat$BC.locs[1]]
+
