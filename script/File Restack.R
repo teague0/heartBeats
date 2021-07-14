@@ -1,4 +1,5 @@
 #Restack annotated files
+#Edit 2021-07-14 to rebuild the split files b/c the index numbers are off on the final dataset.
 
 #Files are split into folders by who did the annotations. J's are csv files, with a couple of annotation pdfs thrown in. M's are txt files with rounded seconds. These need to be rejoined with the original data set based on their index.
 
@@ -61,32 +62,47 @@ length(which(duplicated(index.dat$index) == TRUE)) #Yes. 37498 duplicates. These
 dups <- which(duplicated(index.dat$index) == FALSE) #Keep non-duplicated values
 index.dat <- index.dat[dups,]
 
-load("./data/Uroderma Heart Rate_clean.Rdata") #beats, 554961 x 9
-beats$index <- as.numeric(rownames(beats))
+#Restack up the split original files so the the index is correct.
+load("./data/Uroderma Heart Rate_clean.Rdata")
+orig.files <- list.files("./data/split HR files/", full.names = TRUE)
 
-beats <- beats %>% left_join(index.dat)
+beats2 <- read.csv(orig.files[1])
 
+for(i in 2:length(orig.files)){
+  tmp <- read.csv(orig.files[i])
+  beats2 <- beats2 %>% bind_rows(tmp)
+}
+beats2$timestamp <- ymd_hms(beats2$timestamp)
+beats2 <- beats2 %>% arrange(timestamp) 
+tail(beats2)
+
+
+beats2 <- beats2 %>% left_join(index.dat)
+
+table(index.dat$abBehav)
 #Check to make sure that all of the abBehav levels were entered the same
-table(beats$abBehav) #Table will give a quick count of how many times each unique value is entered in the column
+table(beats2$abBehav) #Table will give a quick count of how many times each unique value is entered in the column
 #             a      A      b      B      C      D      E  E\t\t 
-# 470907      1    114      2     99     14     97    111      3 
+# 422839      1    110      1     97     13     98    110      1 
 
 #We need to reclassify the lower case letters to upper case
-beats$abBehav <- str_to_upper(beats$abBehav) #this will convert lower case to upper case
-table(beats$abBehav)
-#             A      B      C      D      E  E\t\t 
-# 470907    115    101     14     97    111      3 
+beats2$abBehav <- str_to_upper(beats2$abBehav) #this will convert lower case to upper case
+table(beats2$abBehav)
 
 #We're still left with that mysterious E\t\t. That means there are 2 hidden tabs in the cell that were converted to text. We can find those & replace it with E
-beats$abBehav <- str_replace(beats$abBehav, "E\t\t", "E")
-table(beats$abBehav) #That's fixed. We now only have A, B, C, D, E
+beats2$abBehav <- str_replace(beats2$abBehav, "E\t\t", "E")
+table(beats2$abBehav) #That's fixed. We now only have A, B, C, D, E
 #             A      B      C      D      E 
-# 470907    115    101     14     97    114 
+# 422839    111     98     13     98    111 
 
 #There are some things in here that we need to check further. 1) The number of A and E should be the same (number of starts == number of ends). Next, B + C should equal A. That checks out & looks good. Last, B should equal D (right?). 
 
-save(beats, file = "data/Uroderma Heart Rate 2021-07-08.Rdata")
+#Where are the row & index mismatches
+beats <- beats2
+beats <- beats %>% arrange(timestamp)
+ind.chck <- which(rownames(beats) != beats$index)
 
+save(beats, file = "data/Uroderma Heart Rate 2021-07-14.Rdata")
 
 
 
