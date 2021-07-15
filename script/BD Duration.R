@@ -12,10 +12,7 @@ for(i in 1:length(locDat$A.locs)){
   t4 <- beats$timestamp[locDat$E.locs[i]]
   locDat$AEdur.s[i] <- as.numeric(t4) - as.numeric(t3)
 }
-locDat %>%
-select("BCType") %>%
-  geom_point(mapping = aes(x = BCType, y = locDat$AEdur.s [i], value C = blue, = green )
-             
+
 ggplot(locDat)+
   geom_boxplot(aes(x = BCType, y = AEdur.s, fill = BCType))
             
