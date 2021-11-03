@@ -20,7 +20,7 @@ as.numeric(timeLag$timestampEnd)
   timeLag$rowEnd[i] <- which(beats$index == timeLag$indexEnd[i]) #changing from the old index numbers to the real index number by rows
 }
 
-timeLagL <- split(timeLag, f = rownames(timeLag)) 
+timeLagL <- split(timeLag, f = rownames(timeLag))  #create a list of all 28 timeLag observations
 
 datL <- lapply(timeLagL, function(x){
   tmp <- beats[x$rowStart:x$rowEnd,]
@@ -57,7 +57,9 @@ datL2 <- lapply(datL, function(x){
 #if which heartrate is >1 if that is equal to 2 go next
 
 if(length(which(x$heartRate.bpm > 1)) == 2){next} #check in order to not interpolate the data that I do not want interpolated
+timeLagL <- fill()
+for(i in 1:)
+na.approx(timeLagL$)
 
-
-
+lapply(list, function(x))
 

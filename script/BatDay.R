@@ -1,4 +1,4 @@
-## calculate a BatDay, goes from 18 h till 17:59next day (REMEMBER TIME IS LOCAL!!)
+  ## calculate a BatDay, goes from 18 h till 17:59next day (REMEMBER TIME IS LOCAL!!)
 library(lubridate)
 
 

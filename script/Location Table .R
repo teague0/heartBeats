@@ -47,8 +47,11 @@ col_order <- c("A.locs", "BC.locs", "BCType", "DC.locs", "DCType", "E.locs", "D.
 locDat <- locDat[, col_order]
 
 ABreg <- lm(A.locs~BC.locs, data= locDat)
-RegAB <- lm(ABheart~as.numeric(ABTime))
+RegAB <- lapply(1:n, lm(ABheart~as.numeric(ABTime)))
 
 ABheart <- beats$heartRate.bpm[locDat$A.locs[1]:locDat$BC.locs[1]]
 ABTime <- beats$timestamp[locDat$A.locs[1]:locDat$BC.locs[1]]
+
+
+
 
