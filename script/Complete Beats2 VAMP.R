@@ -1,6 +1,19 @@
 library(tidyverse)
 library(lubridate)
 library(plotly)
+#OPTIONAL finding the MAX, Mean, MIN values of any fH data
+locDat[which.min(locDat$A.hr),] %>%
+  select(A.hr)  #tells you the location of its data
+mean(locDat$A.hr)
+median(locDat$A.hr)
+max(locDat$BDdur.s, na.rm = TRUE)
+
+#OPTIONAL trying "for" to find a way to make D column have C values
+map(locDat$D.locs, ifelse(is.na(), locDat$C.locs)
+    
+    for(i in 1:length(locDat$D.locs)){
+      locDat$D.locs[i] = ifelse(is.na(locDat$D.locs[i]), locDat$C.locs[i], locaDat$D.locs[i])
+    }
 
 #reassign index value = row
 beats$index <- rownames(beats)
@@ -156,7 +169,7 @@ locDat$DEchange.BPS <- locDat$DEval.D / locDat$DEdur.s
 #making a graph to show difference in A and E heart rate
     
 #We need to take out the A & R heart rate data only, then combine them into a column that show the point name (A or E), heart rate, and the period ID
-    
+    #Graph of A start HR and E start HR
     locDat$periodID <- paste0("per.", rownames(locDat))
     newDat <- locDat %>% select(periodID, A.hr, E.hr)
     newDat$AEdiff <- newDat$E.hr - newDat$A.hr
@@ -170,7 +183,7 @@ locDat$DEchange.BPS <- locDat$DEval.D / locDat$DEdur.s
     newDatL %>% 
       arrange(AEdiff) %>% 
       ggplot() +
-#geom_boxplot(aes(x=startEnd, y=hr))+
+#Adding color and size to customize graph
       geom_line(aes(x=startEnd, y=hr, color= AEdiff, group=periodID), alpha=.5, size = 1) +
       geom_point(aes(x=startEnd, y=hr, color = AEdiff), size = 2, alpha = 0.6)+
       scale_color_viridis_c(option = "D")

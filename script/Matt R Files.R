@@ -2,24 +2,8 @@ library(tidyverse)
 library(lubridate)
 library(plotly)
 
-#possibly using Map() function
- %>%
-  map(abBehav)
-  filter() %>%
-  select(abBehav) %>%
-  
-# finding the MAX, Mean, MIN values of any fH data
-  locDat[which.min(locDat$A.hr),] %>%
-  select(A.hr)  #tells you the location of its data
-mean(locDat$A.hr) #mean
-median(locDat)
-
-#trying "for" to find a way to make D column have C values
-  map(locDat$D.locs, ifelse(is.na(), locDat$C.locs)
-    
-  for(i in 1:length(locDat$D.locs)){
-  locDat$D.locs[i] = ifelse(is.na(locDat$D.locs[i]), locDat$C.locs[i], locaDat$D.locs[i])
-    }
+#reassign index value = row
+beats$index <- rownames(beats)
 
 #setting up calculations for 100 percentage change between D and E 
 #used this code for setting heart rate to points in A and B locations
@@ -46,6 +30,7 @@ for(i in 1:length(locDat$A.locs)){
   t4 <- beats$timestamp[locDat$E.locs[i]]
   locDat$AEdur.s[i] <- as.numeric(t4) - as.numeric(t3)
 }
+
 #distance between E and the next A
   for(i in 1:length(locDat$A.locs)){
     j = i + 1
@@ -53,7 +38,6 @@ for(i in 1:length(locDat$A.locs)){
     Atime <- beats$timestamp[locDat$A.locs [j]]
     locDat$EAdur.s[i] <- as.numeric(Atime) - as.numeric(Etime)
   }
-
 nullover <- which(locDat$EAdur.s >= 10000)
 locDat$EAdur.s[nullover] <- NA
 
@@ -66,6 +50,35 @@ dat <- lapply(locDat_l, function(x){
 })
 dat_df <- do.call("rbind", dat)
 
+#making a graph to show difference in A and E heart rate
 
-    
-  
+#We need to take out the A & R heart rate data only, then combine them into a column that show the point name (A or E), heart rate, and the period ID
+
+locDat$periodID <- paste0("per.", rownames(locDat))
+newDat <- locDat %>% select(periodID, A.hr, E.hr)
+newDat$AEdiff <- newDat$E.hr - newDat$A.hr
+newDatL <- newDat %>% gather(startEnd, hr, A.hr:E.hr)
+
+ggplot(data=newDatL, aes(x=startEnd, y=hr, group=periodID)) +
+geom_line(alpha=.5) +
+geom_point() +
+geom_boxplot()
+
+newDatL %>% 
+  arrange(AEdiff) %>% 
+ggplot() +
+  #geom_boxplot(aes(x=startEnd, y=hr))+
+  geom_line(aes(x=startEnd, y=hr, color= AEdiff, group=periodID), alpha=.5, size = 1) +
+  geom_point(aes(x=startEnd, y=hr, color = AEdiff), size = 2, alpha = 0.6)+
+  scale_color_viridis_c(option = "D")
+
+#change over time Graph
+locDat$periodID <- paste0("per.", rownames(locDat))
+TchangeABDE <- locDat %>% select(periodID, ABchange.BPS, DEchange.BPS)
+TchangeABDE_L <- TchangeABDE %>% gather(downUp, change, ABchange.BPS:DEchange.BPS)
+
+ggplot(TchangeABDE_L) +
+  geom_boxplot(aes(x = downUp, y = abs(change)))
+
+
+
