@@ -98,9 +98,78 @@ notInter <- which(hrWithInterpol$isInterpolated == "no")
 
 hrWithInterpol <- hrWithInterpol %>% arrange(batID_day, timestamp)
 
+hrWithInterpol <- hrWithInterpol %>% mutate(vo2 = 0.042 * bodyMass^0.328 * heartMass^0.913 *heartRate.bpm^2.065, #vo2 in mL per min
+                          joulPerMin = vo2 * 21.11, #convert VO2 (ml per min) to Joules per min 1 mLO2 = 21.11 J 
+                          watts = joulPerMin / 60, #joules per minute to joules per second (W)
+                          joulPerHour = joulPerMin * 60) 
 
-InterpolatedBeats <- InterpolatedBeats %>% 
-  dplyr::mutate(vo2 = 0.042 * bodyMass^0.328 * heartMass^0.913 *heartRate.bpm^2.065, #vo2 in mL per min
-                joulPerMin = vo2 * 21.11, #convert VO2 (ml per min) to Joules per min 1 mLO2 = 21.11 J 
-                watts = joulPerMin / 60, #joules per minute to joules per second (W)
-                joulPerHour = joulPerMin * 60)
+bioDat <- beats2 %>% dplyr::group_by(batID) %>% 
+  dplyr::summarize(bodyMass = mean(bodyMass, na.rm = TRUE),
+                   heartMass = mean(heartMass, na.rm = TRUE))
+hrWithInterpol <- hrWithInterpol %>% left_join(bioDat, by = "batID")
+
+hrWithInterpol$heartMass <- hrWithInterpol$heartMass.y 
+hrWithInterpol$heartMass.y <- NULL 
+hrWithInterpol$heartMass.x <- NULL 
+#InterpolatedBeats$heartMass.y.y <- NULL 
+hrWithInterpol$bodyMass <- hrWithInterpol$bodyMass.y
+hrWithInterpol$bodyMass.x <- NULL 
+hrWithInterpol$bodyMass.y <- NULL 
+
+
+beatsTL$ee.inst.joul <- beatsTL$watts * beatsTL$timelag2
+
+hrWithInterpol$timelag2 <- NA 
+LastTimeLag <- split(hrWithInterpol, f = hrWithInterpol$batID_day)
+
+LastTimeLag_L <- lapply(LastTimeLag, function(x){
+  for(i in 1:(length(x$timelag2)-1)){
+    j = i+1
+    x$timelag2[1] <- 1
+    x$timelag2[j] <- difftime(x$timestamp[j], x$timestamp[i], units = "secs")
+  }
+    return(x)
+  })
+
+beatsTL <- do.call("rbind", LastTimeLag_L)
+#There are duplicated values from the interpolation. Get rid of them.
+nas <- which(is.na(beatsTL$uniqueNames))
+dups <- which(duplicated(beatsTL$uniqueNames) == TRUE)
+dups.noNA <- setdiff(dups, nas)
+beatsTL <- beatsTL[-dups.noNA,]
+
+
+
+tableCounts <- beatsTL %>% group_by(batID, batID_day, abBehav) %>%
+  summarize(Numbers = n()) %>%
+  filter(abBehav == "A")
+  
+daySums <- beatsTL %>% group_by(batID_day) %>% 
+  summarize(dee.KJ = sum(ee.inst.joul)/1000,
+            minsRecorded = sum(timelag2)/60)
+
+TLplots <- daySums %>% left_join(tableCounts, by = "batID_day")
+
+TLplots %>% filter(!is.na(batID)) %>% 
+ggplot()+
+  geom_point(aes(x = dee.KJ, y = Numbers, color = batID), size = 2)+
+  scale_color_viridis_d()+ 
+  labs(x = "Daily Energy Expenditure (kJ)", y = "Number of Drops per Day")+
+  theme_bw()
+
+ggsave("./output/DEE vs Drops.png")
+
+dropDurations <- locDat %>%
+group_by(batID_day) %>%
+  summarise(totalduration = sum(AEdur.s))
+
+TLplots <- TLplots %>% left_join(dropDurations, by = "batID_day")
+
+TLplots %>% filter(!is.na(batID)) %>% 
+ggplot()+
+  geom_point(aes(x = dee.KJ, y = as.numeric(totalduration)/60, color = batID), size = 2)+
+  scale_color_viridis_d()+ 
+  labs(x = "Daily Energy Expenditure (kJ)", y = "Duration of AE drops (mins)")+
+  theme_bw()
+
+ggsave("./output/DEE vs. AE Dur.png")
